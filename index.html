@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Russian × 中文 词汇听力</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Serif+SC:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">RUSSIAN × 中文</p>
+          <h1>开车也能连听的词汇电台</h1>
+          <p class="subhead">
+            选择词库，连续播放俄语和中文翻译。支持在线语音 API，可刷新词库。
+          </p>
+        </div>
+        <div class="hero-card">
+          <div class="now-playing">
+            <p class="label">正在播放</p>
+            <div id="currentWord" class="word">—</div>
+            <div id="currentTranslation" class="translation">—</div>
+          </div>
+          <div class="controls">
+            <button id="playToggle" class="primary">开始连续播放</button>
+            <button id="nextWord" class="ghost">下一词</button>
+            <button id="masteredBtn" class="ghost">掌握了</button>
+          </div>
+          <div class="status" id="statusText">准备就绪</div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>词库与播放设置</h2>
+          <p>切换词库或输入在线地址，刷新即可同步更新。</p>
+        </div>
+        <div class="panel-grid">
+          <label class="field">
+            <span>选择词库</span>
+            <select id="bankSelect"></select>
+          </label>
+          <label class="field">
+            <span>词库来源 URL（可选）</span>
+            <div class="row">
+              <input id="bankUrl" type="url" placeholder="https://example.com/russian.json" />
+              <button id="refreshBank" class="ghost">刷新</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>在线语音 API</span>
+            <select id="ttsProvider">
+              <option value="openai">OpenAI TTS（推荐）</option>
+              <option value="browser">浏览器语音（离线）</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>OpenAI API Key</span>
+            <input id="apiKey" type="password" placeholder="sk-..." />
+          </label>
+          <label class="field">
+            <span>语音模型</span>
+            <input id="ttsModel" type="text" value="gpt-4o-mini-tts" />
+          </label>
+          <label class="field">
+            <span>翻译模型</span>
+            <input id="translateModel" type="text" value="gpt-4o-mini" />
+          </label>
+          <label class="field">
+            <span>翻译 API</span>
+            <select id="translateProvider">
+              <option value="openai">OpenAI 翻译</option>
+              <option value="deepseek">DeepSeek 翻译</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>翻译 API Key</span>
+            <input id="translateApiKey" type="password" placeholder="sk-..." />
+          </label>
+          <label class="field">
+            <span>俄语语音 / 中文语音</span>
+            <div class="row">
+              <input id="ruVoice" type="text" value="alloy" />
+              <input id="zhVoice" type="text" value="nova" />
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>待听列表</h2>
+          <p>掌握后的词会自动隐藏，不再出现。</p>
+        </div>
+        <div id="wordList" class="word-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>提示：驾驶时建议将设备固定，并使用车载音响或蓝牙。</p>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>
