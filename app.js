@@ -96,6 +96,10 @@ let currentIndex = 0;
 let isPlaying = false;
 let isLoading = false;
 
+// 分页配置
+const PAGE_SIZE = 50;
+let currentPage = 0;
+
 const audioPlayer = new Audio();
 audioPlayer.preload = "auto";
 
@@ -106,8 +110,8 @@ const persisted = {
   ruVoice: localStorage.getItem("ruVoice") || "alloy",
   zhVoice: localStorage.getItem("zhVoice") || "nova",
   bankUrl: localStorage.getItem("bankUrl") || "",
-  translateModel: localStorage.getItem("translateModel") || "gpt-4o-mini",
-  translateProvider: localStorage.getItem("translateProvider") || "openai",
+  translateModel: localStorage.getItem("translateModel") || "deepseek-chat",
+  translateProvider: localStorage.getItem("translateProvider") || "deepseek",
   translateApiKey: localStorage.getItem("translateApiKey") || ""
 };
 
@@ -205,13 +209,50 @@ function applyMasteredFilter(bankWords) {
   return bankWords.filter((word) => !masteredSet.has(keyForWord(word)));
 }
 
+function getTotalPages() {
+  return Math.ceil(words.length / PAGE_SIZE);
+}
+
+function getPageWords() {
+  const start = currentPage * PAGE_SIZE;
+  const end = start + PAGE_SIZE;
+  return words.slice(start, end);
+}
+
+function renderPagination() {
+  const totalPages = getTotalPages();
+  if (totalPages <= 1) return "";
+
+  const pageInfo = `第 ${currentPage + 1}/${totalPages} 页 (共 ${words.length} 词)`;
+  return `
+    <div class="pagination">
+      <button class="ghost page-btn" data-action="prev" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>
+      <span class="page-info">${pageInfo}</span>
+      <button class="ghost page-btn" data-action="next" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>下一页</button>
+    </div>
+  `;
+}
+
 function renderWordList() {
   wordListEl.innerHTML = "";
   if (words.length === 0) {
-    wordListEl.innerHTML = `<div class="word-card"><div class="ru">全部掌握 🎉</div><div class="zh">请刷新或选择其他词库</div></div>`;
+    wordListEl.innerHTML = `<div class="word-card"><div class="ru">全部掌握!</div><div class="zh">请刷新或选择其他词库</div></div>`;
     return;
   }
-  words.forEach((word, index) => {
+
+  // 渲染分页控件
+  const paginationTop = document.createElement("div");
+  paginationTop.innerHTML = renderPagination();
+  if (paginationTop.firstElementChild) {
+    wordListEl.appendChild(paginationTop.firstElementChild);
+  }
+
+  // 只渲染当前页的词汇
+  const pageWords = getPageWords();
+  const startIndex = currentPage * PAGE_SIZE;
+
+  pageWords.forEach((word, i) => {
+    const index = startIndex + i;
     const card = document.createElement("div");
     card.className = "word-card";
     if (index === currentIndex) {
@@ -229,6 +270,27 @@ function renderWordList() {
       playSingleWord();
     });
     wordListEl.appendChild(card);
+  });
+
+  // 渲染底部分页控件
+  const paginationBottom = document.createElement("div");
+  paginationBottom.innerHTML = renderPagination();
+  if (paginationBottom.firstElementChild) {
+    wordListEl.appendChild(paginationBottom.firstElementChild);
+  }
+
+  // 绑定分页按钮事件
+  wordListEl.querySelectorAll(".page-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.action;
+      if (action === "prev" && currentPage > 0) {
+        currentPage--;
+        renderWordList();
+      } else if (action === "next" && currentPage < getTotalPages() - 1) {
+        currentPage++;
+        renderWordList();
+      }
+    });
   });
 }
 
@@ -278,6 +340,7 @@ async function loadBank(name) {
     const selected = remote || builtIn.words || [];
     words = applyMasteredFilter(selected);
     currentIndex = 0;
+    currentPage = 0;
     updateCurrentWord();
     statusText.textContent = remote ? "已从在线词库刷新。" : "词库已加载。";
   } catch (error) {
@@ -285,6 +348,7 @@ async function loadBank(name) {
     const fallback = builtInBanks[name]?.words || [];
     words = applyMasteredFilter(fallback);
     currentIndex = 0;
+    currentPage = 0;
     updateCurrentWord();
   } finally {
     isLoading = false;
@@ -514,13 +578,27 @@ playToggle.addEventListener("click", () => {
 nextWord.addEventListener("click", advanceWord);
 masteredBtn.addEventListener("click", markMastered);
 
+// 防抖保存设置
+let saveTimeout = null;
+function debouncedSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveSettings, 300);
+}
+
+// API Key 输入时实时保存（防抖）
+apiKeyInput.addEventListener("input", debouncedSave);
 apiKeyInput.addEventListener("change", saveSettings);
 ttsProvider.addEventListener("change", saveSettings);
+ttsModelInput.addEventListener("input", debouncedSave);
 ttsModelInput.addEventListener("change", saveSettings);
+ruVoiceInput.addEventListener("input", debouncedSave);
 ruVoiceInput.addEventListener("change", saveSettings);
+zhVoiceInput.addEventListener("input", debouncedSave);
 zhVoiceInput.addEventListener("change", saveSettings);
+bankUrl.addEventListener("input", debouncedSave);
 bankUrl.addEventListener("change", saveSettings);
 if (translateModelInput) {
+  translateModelInput.addEventListener("input", debouncedSave);
   translateModelInput.addEventListener("change", saveSettings);
 }
 if (translateProviderInput) {
@@ -530,6 +608,7 @@ if (translateProviderInput) {
   });
 }
 if (translateApiKeyInput) {
+  translateApiKeyInput.addEventListener("input", debouncedSave);
   translateApiKeyInput.addEventListener("change", saveSettings);
 }
 

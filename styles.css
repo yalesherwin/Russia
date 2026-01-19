@@ -225,6 +225,39 @@ button:hover {
   font-size: 0.85rem;
 }
 
+.pagination {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(14, 17, 22, 0.08);
+  margin-bottom: 8px;
+}
+
+.pagination:last-child {
+  border-bottom: none;
+  border-top: 1px solid rgba(14, 17, 22, 0.08);
+  margin-bottom: 0;
+  margin-top: 8px;
+}
+
+.page-info {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 .footer {
   text-align: center;
   color: var(--muted);
